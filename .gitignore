@@ -1,0 +1,38 @@
+# Ignore legacy project
+/twitter_bot-main/
+
+# Environment & local config
+.env
+.env.*
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+.venv/
+venv/
+
+# Tooling
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local data & logs
+var/
+logs/
+*.log
+
+# IDE/Editor
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Reports & temp
+/tmp/
+*.tmp

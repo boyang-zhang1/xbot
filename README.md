@@ -1,0 +1,34 @@
+# Twitter Bot Toolkit
+
+A production-grade toolkit that monitors curated Twitter accounts, translates their long-form threads into polished Simplified Chinese, and republishes translations through Twitter and a Telegram operator bot.
+
+## Features
+- Account watchlists with incremental scraping and credential rotation
+- Translation pipeline with OpenAI integration and manual override workflows
+- Twitter publishing with thread support, media handling, and templated closing messages
+- Telegram control bot for end-to-end operations
+- Rich logging, typed configuration, and CLI utilities for automation
+
+## Quick Start
+1. **Create a virtual environment** using Poetry or your preferred tool, then install dependencies:
+   ```bash
+   poetry install
+   ```
+2. **Configure secrets** by creating a `.env` file and populating the environment variables described in `docs/operations.md`.
+3. **Run migrations** to bring legacy JSON exports into the new storage layout:
+   ```bash
+   poetry run twitter-bot migrate from-legacy --source twitter_bot-main
+   ```
+4. **Scrape, translate, and publish** via the CLI or Telegram bot.
+
+See `docs/operations.md` for full instructions and runbooks.
+
+## Repository Layout
+- `src/twitter_bot/` - Source package with services, models, and interfaces
+- `tests/` - Unit and integration test suites
+- `scripts/` - Utility scripts (migrations, data seeding)
+- `docs/` - Architecture and operations documentation
+- `var/` - Runtime artefacts (JSON stores, logs), ignored by git
+
+## Status
+This repository is under active development as we rebuild the legacy automation stack into a sustainable open-source project.
