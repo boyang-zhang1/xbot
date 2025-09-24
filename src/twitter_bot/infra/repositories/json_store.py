@@ -6,8 +6,8 @@ import threading
 from pathlib import Path
 from typing import Dict, List
 
-from twitter_bot.interfaces.storage import TranslationRepository, TweetRepository
-from twitter_bot.models import TranslationRecord, TweetThread
+from twitter_bot.interfaces.storage import JobRepository, TranslationRepository, TweetRepository
+from twitter_bot.models import ScheduledJob, TranslationRecord, TweetThread
 from twitter_bot.utils.io import read_json_file, write_json_atomic
 
 
@@ -101,5 +101,41 @@ class JSONTranslationRepository(_BaseJSONRepository, TranslationRepository):
                 del data[root_tweet_id]
                 self._persist()
 
+class JSONJobRepository(_BaseJSONRepository, JobRepository):
+    """Persist scheduled jobs in a JSON file keyed by job ID."""
 
-__all__ = ["JSONTweetRepository", "JSONTranslationRepository"]
+    def enqueue(self, job: ScheduledJob) -> None:
+        with self._lock:
+            data = self._load()
+            data[job.job_id] = job.model_dump(mode="json")
+            self._persist()
+
+    def get(self, job_id: str) -> ScheduledJob | None:
+        with self._lock:
+            data = self._load()
+            payload = data.get(job_id)
+            if payload is None:
+                return None
+            return ScheduledJob.model_validate(payload)
+
+    def list_pending(self) -> List[ScheduledJob]:
+        with self._lock:
+            data = self._load()
+            return [
+                ScheduledJob.model_validate(item)
+                for item in data.values()
+                if item.get("status") in {"pending", "failed"}
+            ]
+
+    def update(self, job: ScheduledJob) -> None:
+        with self._lock:
+            data = self._load()
+            data[job.job_id] = job.model_dump(mode="json")
+            self._persist()
+
+
+__all__ = [
+    "JSONTweetRepository",
+    "JSONTranslationRepository",
+    "JSONJobRepository",
+]

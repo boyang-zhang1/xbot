@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Iterable, Protocol, Sequence
 
-from twitter_bot.models import TranslationRecord, TweetThread
+from twitter_bot.models import ScheduledJob, TranslationRecord, TweetThread
 
 
 class TweetRepository(Protocol):
@@ -45,6 +45,22 @@ class TranslationRepository(Protocol):
         ...
 
 
+class JobRepository(Protocol):
+    """Persistence operations for scheduled jobs."""
+
+    def enqueue(self, job: ScheduledJob) -> None:
+        ...
+
+    def get(self, job_id: str) -> ScheduledJob | None:
+        ...
+
+    def list_pending(self) -> Sequence[ScheduledJob]:
+        ...
+
+    def update(self, job: ScheduledJob) -> None:
+        ...
+
+
 def bulk_upsert(repository: TweetRepository, threads: Iterable[TweetThread]) -> None:
     """Persist a collection of threads using the provided repository."""
 
@@ -55,5 +71,6 @@ def bulk_upsert(repository: TweetRepository, threads: Iterable[TweetThread]) -> 
 __all__ = [
     "TweetRepository",
     "TranslationRepository",
+    "JobRepository",
     "bulk_upsert",
 ]
