@@ -1,8 +1,7 @@
 import json
 from pathlib import Path
 
-import importlib
-
+from twitter_bot.cli import migrate as migrate_cli
 from twitter_bot.config import settings as settings_module
 from twitter_bot.infra.repositories.json_store import (
     JSONTranslationRepository,
@@ -76,8 +75,7 @@ def test_migrate_from_legacy(tmp_path, monkeypatch):
 
     settings_module.get_settings.cache_clear()  # type: ignore[attr-defined]
 
-    module = importlib.import_module("scripts.migrate_legacy_data")
-    module.migrate_from_legacy.callback(source=source)  # type: ignore[attr-defined]
+    migrate_cli.migrate_from_legacy.callback(source=source)  # type: ignore[attr-defined]
 
     tweet_repo = JSONTweetRepository(data_dir / "tweets.json")
     translation_repo = JSONTranslationRepository(data_dir / "translations.json")
@@ -88,5 +86,4 @@ def test_migrate_from_legacy(tmp_path, monkeypatch):
     assert isinstance(thread, TweetThread)
     assert isinstance(translation, TranslationRecord)
     assert translation.titles == ("Title 1", "Title 2")
-
 
