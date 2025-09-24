@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import typer
 
-from twitter_bot.cli import migrate, scrape
+from twitter_bot.cli import migrate, scrape, translate
 
 app = typer.Typer(help="Twitter bot automation toolkit.")
 app.add_typer(migrate.app, name="migrate")
 app.add_typer(scrape.app, name="scrape")
+app.add_typer(translate.app, name="translate")
 
 
 __all__ = ["app"]
