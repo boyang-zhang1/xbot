@@ -2,10 +2,30 @@
 
 from __future__ import annotations
 
+import time
 from typing import Sequence
 
-from openai import OpenAI
-from openai.types.chat import ChatCompletion
+try:  # pragma: no cover - optional dependency
+    from openai import APIError, OpenAI, RateLimitError
+    from openai.types.chat import ChatCompletion
+except ImportError:  # pragma: no cover - fallback used in tests/offline
+    class APIError(Exception):
+        pass
+
+    class RateLimitError(APIError):
+        def __init__(self, message: str, request=None, response=None) -> None:
+            super().__init__(message)
+            self.message = message
+            self.request = request
+            self.response = response
+
+    class OpenAI:  # type: ignore[no-redef]
+        def __init__(self, *_, **__):
+            raise RuntimeError("openai package is not installed")
+
+    class ChatCompletion:  # minimal stub for typing
+        def __init__(self, choices):
+            self.choices = choices
 
 from twitter_bot.interfaces.translation_provider import TranslationProvider
 from twitter_bot.models import TweetThread
@@ -31,6 +51,9 @@ class OpenAITranslationClient(TranslationProvider):
         translation_model: str,
         summary_model: str,
         timeout: int,
+        *,
+        max_retries: int = 3,
+        retry_delay: float = 2.0,
     ) -> None:
         if not api_key:
             raise ValueError("OPENAI_API_KEY is not configured")
@@ -38,16 +61,17 @@ class OpenAITranslationClient(TranslationProvider):
         self._translation_model = translation_model
         self._summary_model = summary_model
         self._timeout = timeout
+        self._max_retries = max(1, max_retries)
+        self._retry_delay = max(0.5, retry_delay)
 
     def translate_segments(self, thread: TweetThread) -> Sequence[str]:
         content = _thread_to_prompt(thread)
-        completion = self._client.chat.completions.create(
+        completion = self._invoke_chat_completion(
             model=self._translation_model,
             messages=[
                 {"role": "system", "content": TRANSLATION_SYSTEM_PROMPT},
                 {"role": "user", "content": content},
             ],
-            timeout=self._timeout,
         )
         return _parse_translation_payload(completion, expected=len(thread.tweets))
 
@@ -55,13 +79,12 @@ class OpenAITranslationClient(TranslationProvider):
         self, thread: TweetThread, translated_segments: Sequence[str], count: int
     ) -> Sequence[str]:
         body = _titles_prompt(thread, translated_segments, count)
-        completion = self._client.chat.completions.create(
+        completion = self._invoke_chat_completion(
             model=self._summary_model,
             messages=[
                 {"role": "system", "content": TITLE_SYSTEM_PROMPT},
                 {"role": "user", "content": body},
             ],
-            timeout=self._timeout,
         )
         content = _extract_content(completion)
         titles = [line.strip() for line in content.splitlines() if line.strip()]
@@ -69,6 +92,24 @@ class OpenAITranslationClient(TranslationProvider):
 
     def build_manual_prompt(self, thread: TweetThread) -> str:
         return _thread_to_prompt(thread)
+
+    def _invoke_chat_completion(self, **payload) -> ChatCompletion:
+        delay = self._retry_delay
+        for attempt in range(1, self._max_retries + 1):
+            try:
+                return self._client.chat.completions.create(
+                    timeout=self._timeout, **payload
+                )
+            except RateLimitError as exc:  # pragma: no cover - requires live API
+                if attempt == self._max_retries:
+                    raise
+                time.sleep(delay)
+                delay *= 2
+            except APIError:
+                if attempt == self._max_retries:
+                    raise
+                time.sleep(delay)
+        raise RuntimeError("Failed to invoke OpenAI completion")
 
 
 def _thread_to_prompt(thread: TweetThread) -> str:
