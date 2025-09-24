@@ -61,6 +61,16 @@ class TranslationRecord(ModelBase):
     def mark_updated(self) -> "TranslationRecord":
         return self.model_copy(update={"updated_at": datetime.now(tz=timezone.utc)})
 
+    def mark_published(self) -> "TranslationRecord":
+        """Return a copy flagged as published and refresh timestamps."""
+
+        return self.model_copy(
+            update={
+                "status": TranslationStatus.PUBLISHED,
+                "updated_at": datetime.now(tz=timezone.utc),
+            }
+        )
+
 
 __all__ = [
     "TranslationRecord",

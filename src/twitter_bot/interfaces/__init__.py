@@ -1,7 +1,7 @@
 """Interface exports for the twitter_bot package."""
 
 from .storage import TranslationRepository, TweetRepository, bulk_upsert
-from .twitter_client import ScraperClient
+from .twitter_client import PublisherClient, ScraperClient
 from .translation_provider import TranslationProvider
 
 __all__ = [
@@ -9,5 +9,6 @@ __all__ = [
     "TranslationRepository",
     "bulk_upsert",
     "ScraperClient",
+    "PublisherClient",
     "TranslationProvider",
 ]

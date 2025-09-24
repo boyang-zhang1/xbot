@@ -14,4 +14,16 @@ class ScraperClient(Protocol):
         ...
 
 
-__all__ = ["ScraperClient"]
+class PublisherClient(Protocol):
+    """Client capable of publishing tweets and threads."""
+
+    def post_tweet(
+        self,
+        text: str,
+        media_urls: Sequence[str] | None = None,
+        in_reply_to: str | None = None,
+    ) -> str:
+        ...
+
+
+__all__ = ["ScraperClient", "PublisherClient"]
