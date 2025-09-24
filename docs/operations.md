@@ -37,6 +37,17 @@
   ```bash
   poetry run twitter-bot publish tweet --tweet-id 1234567890 --profile default
   ```
+- **Queue jobs for later execution**
+  ```bash
+  poetry run twitter-bot schedule enqueue-translate 1234567890 --run-at "2024-07-21T14:00:00Z"
+  poetry run twitter-bot schedule run
+  ```
+- **Review stored translations**
+  ```bash
+  poetry run twitter-bot review translations
+  poetry run twitter-bot review show 1234567890
+  poetry run twitter-bot review export 1234567890 exports/1234567890.txt
+  ```
 - **Run the Telegram bot**
   ```bash
   poetry run twitter-bot telegram run
@@ -49,9 +60,10 @@
 
 ## Backups
 - Schedule regular copies of `var/data/` and job states.
-- Use the `twitter-bot backup snapshot` command (coming soon) for consistent archives.
+- Use `twitter-bot review export` to extract individual translations for archival sharing.
 
 ## Troubleshooting
 - **Translation failures** - inspect `var/logs/translation.log` and re-run with `--manual` to obtain prompt.
 - **Publish errors** - run in `--dry-run` to validate length and assets without posting.
 - **Telegram connectivity** - confirm session file in `var/telegram/` and regenerate if expired using CLI `telegram auth` flow.
+- **Missing optional dependencies** - when running in air-gapped environments, install `tweety`, `tweepy`, `httpx`, and `requests-oauthlib` to enable scraping/publishing, otherwise the CLI will raise a runtime error when those features are exercised.
