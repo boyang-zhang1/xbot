@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Annotated
 
 import typer
 
@@ -18,14 +19,22 @@ app = typer.Typer(help="Migration helpers for legacy data exports.")
 
 @app.command("from-legacy")
 def migrate_from_legacy(
-    source: Path = typer.Argument(..., exists=True, file_okay=False, dir_okay=True, readable=True),
-    tweets_filename: str = typer.Option("complete_tweets.json", help="Legacy tweets file name."),
-    translations_filename: str = typer.Option(
-        "translated_tweets_sorted.json", help="Legacy translations file name."
-    ),
-    include_translations: bool = typer.Option(
-        True, help="Import translated threads if the legacy file is present."
-    ),
+    source: Annotated[
+        Path,
+        typer.Argument(..., exists=True, file_okay=False, dir_okay=True, readable=True),
+    ],
+    tweets_filename: Annotated[
+        str,
+        typer.Option(help="Legacy tweets file name."),
+    ] = "complete_tweets.json",
+    translations_filename: Annotated[
+        str,
+        typer.Option(help="Legacy translations file name."),
+    ] = "translated_tweets_sorted.json",
+    include_translations: Annotated[
+        bool,
+        typer.Option(help="Import translated threads if the legacy file is present."),
+    ] = True,
 ) -> None:
     """Migrate legacy JSON exports located under *source* into the current storage layout."""
 
@@ -51,6 +60,9 @@ def migrate_from_legacy(
         typer.echo(f"Imported {imported_translations} translations from {translations_path}.")
     elif include_translations:
         typer.echo(f"Translations file not found at {translations_path}; skipped import.")
+
+
+migrate_from_legacy.callback = migrate_from_legacy  # type: ignore[attr-defined]
 
 
 __all__ = ["app", "migrate_from_legacy"]

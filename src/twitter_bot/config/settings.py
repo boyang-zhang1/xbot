@@ -2,29 +2,35 @@
 
 from __future__ import annotations
 
+import os
+from collections.abc import Iterable
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Any
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def _split_csv(value: str | Iterable[str] | None) -> Tuple[str, ...]:
+def _split_csv(value: str | Iterable[str] | None) -> tuple[str, ...]:
     """Normalise comma-separated values into a tuple of strings."""
+
     if value is None:
         return tuple()
     if isinstance(value, str):
         parts = [part.strip() for part in value.split(",") if part.strip()]
-    else:
-        parts = [str(part).strip() for part in value if str(part).strip()]
-    return tuple(parts)
+        return tuple(parts)
+    return tuple(str(part).strip() for part in value if str(part).strip())
 
 
 class PathsSettings(BaseSettings):
     """Filesystem paths used by the application."""
 
-    model_config = SettingsConfigDict(env_prefix="APP_", env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_prefix="APP_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
     data_dir: Path = Field(default=Path("var/data"))
     log_dir: Path = Field(default=Path("var/logs"))
@@ -37,17 +43,21 @@ class PathsSettings(BaseSettings):
 class ScraperSettings(BaseSettings):
     """Settings for the Twitter scraping workflow."""
 
-    model_config = SettingsConfigDict(env_prefix="TWITTER_SCRAPER_", env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_prefix="TWITTER_SCRAPER_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
-    handles: Tuple[str, ...] = Field(default=tuple(), alias="handles")
-    usernames: Tuple[str, ...] = Field(default=tuple(), alias="usernames")
-    password: str = Field(default="", alias="password")
-    session_dir: Path = Field(default=Path("var/twitter_sessions"), alias="session_dir")
-    interval_seconds: int = Field(default=7200, alias="interval_seconds")
+    handles: tuple[str, ...] | str = Field(default_factory=tuple)
+    usernames: tuple[str, ...] | str = Field(default_factory=tuple)
+    password: str = Field(default="")
+    session_dir: Path = Field(default=Path("var/twitter_sessions"))
+    interval_seconds: int = Field(default=7200)
 
     @field_validator("handles", "usernames", mode="before")
     @classmethod
-    def _split_values(cls, value: str | Iterable[str] | None) -> Tuple[str, ...]:
+    def _coerce_csv(cls, value: str | Iterable[str] | None) -> tuple[str, ...]:
         return _split_csv(value)
 
     def ensure_directories(self) -> None:
@@ -57,7 +67,10 @@ class ScraperSettings(BaseSettings):
 class PublisherProfileSettings(BaseSettings):
     """OAuth credentials for a single publisher profile."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
     consumer_key: str
     consumer_secret: str
@@ -68,25 +81,60 @@ class PublisherProfileSettings(BaseSettings):
 class PublisherSettings(BaseSettings):
     """Settings for publishing translated content to Twitter."""
 
-    model_config = SettingsConfigDict(env_prefix="TWITTER_", env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_prefix="TWITTER_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
-    consumer_keys: Tuple[str, ...] = Field(default=tuple(), alias="CONSUMER_KEYS")
-    consumer_secrets: Tuple[str, ...] = Field(default=tuple(), alias="CONSUMER_SECRETS")
-    access_tokens: Tuple[str, ...] = Field(default=tuple(), alias="ACCESS_TOKENS")
-    access_token_secrets: Tuple[str, ...] = Field(default=tuple(), alias="ACCESS_TOKEN_SECRETS")
-    profiles: Tuple[str, ...] = Field(default=("default",), alias="PUBLISH_PROFILES")
-    final_messages: Tuple[str, ...] = Field(default=tuple(), alias="FINAL_MESSAGES")
+    consumer_keys: tuple[str, ...] | str = Field(default_factory=tuple)
+    consumer_secrets: tuple[str, ...] | str = Field(default_factory=tuple)
+    access_tokens: tuple[str, ...] | str = Field(default_factory=tuple)
+    access_token_secrets: tuple[str, ...] | str = Field(default_factory=tuple)
+    profiles: tuple[str, ...] | str = Field(default_factory=tuple)
+    final_messages: tuple[str, ...] | str = Field(default_factory=tuple)
 
-    @field_validator("consumer_keys", "consumer_secrets", "access_tokens", "access_token_secrets", "profiles", "final_messages", mode="before")
+    @field_validator(
+        "consumer_keys",
+        "consumer_secrets",
+        "access_tokens",
+        "access_token_secrets",
+        "profiles",
+        "final_messages",
+        mode="before",
+    )
     @classmethod
-    def _split_values(cls, value: str | Iterable[str] | None) -> Tuple[str, ...]:
+    def _coerce_csv(cls, value: str | Iterable[str] | None) -> tuple[str, ...]:
         return _split_csv(value)
+
+    def model_post_init(self, __context: Any) -> None:  # type: ignore[override]
+        lookup = {
+            "consumer_keys": "CONSUMER_KEYS",
+            "consumer_secrets": "CONSUMER_SECRETS",
+            "access_tokens": "ACCESS_TOKENS",
+            "access_token_secrets": "ACCESS_TOKEN_SECRETS",
+            "profiles": "PUBLISH_PROFILES",
+            "final_messages": "FINAL_MESSAGES",
+        }
+        for field_name, env_suffix in lookup.items():
+            current = getattr(self, field_name)
+            if current:
+                continue
+            raw = os.getenv(f"TWITTER_{env_suffix}")
+            if raw:
+                object.__setattr__(self, field_name, _split_csv(raw))
+        if not self.profiles:
+            object.__setattr__(self, "profiles", ("default",))
 
 
 class OpenAISettings(BaseSettings):
     """Configuration for OpenAI-powered translation and summarisation."""
 
-    model_config = SettingsConfigDict(env_prefix="OPENAI_", env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_prefix="OPENAI_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
     api_key: str = Field(default="")
     translation_model: str = Field(default="gpt-4o-mini")
@@ -97,7 +145,11 @@ class OpenAISettings(BaseSettings):
 class TelegramSettings(BaseSettings):
     """Credentials for the Telegram operator bot."""
 
-    model_config = SettingsConfigDict(env_prefix="TELEGRAM_", env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_prefix="TELEGRAM_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
     api_id: int = Field(default=0)
     api_hash: str = Field(default="")
@@ -108,9 +160,12 @@ class TelegramSettings(BaseSettings):
 class FeatureToggleSettings(BaseSettings):
     """Optional feature toggles used across the application."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
-    enable_translation_titles: bool = Field(default=True, alias="ENABLE_TRANSLATION_TITLES")
+    enable_translation_titles: bool = Field(default=True)
 
 
 class Settings:

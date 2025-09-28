@@ -48,7 +48,7 @@ def configure_logging(settings: Settings | None = None) -> structlog.BoundLogger
             structlog.processors.TimeStamper(fmt="iso"),
             structlog.processors.add_log_level,
             structlog.processors.EventRenamer("message"),
-            structlog.processors.DictUnicodeEncoder(),
+            structlog.processors.JSONRenderer(),
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(DEFAULT_LOG_LEVEL)),

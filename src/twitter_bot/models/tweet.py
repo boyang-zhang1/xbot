@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Iterable, Tuple
+from collections.abc import Iterable
+from typing import Any
 
 from pydantic import Field, field_validator, model_validator
 
@@ -42,22 +43,29 @@ class TweetSegment(ModelBase):
     tweet_id: str = Field(alias="ID")
     text: str = Field(alias="Text")
     timestamp: datetime = Field(alias="Timestamp")
-    media: Tuple[MediaAsset, ...] = Field(default_factory=tuple)
+    media: tuple[MediaAsset, ...] = Field(default_factory=tuple)
 
     @field_validator("timestamp", mode="before")
     @classmethod
     def _coerce_timestamp(cls, value: Any) -> datetime:
         if isinstance(value, (int, float)):
             return ModelBase.from_timestamp(value)
-        if isinstance(value, str) and value.isdigit():
-            return ModelBase.from_timestamp(float(value))
+        if isinstance(value, str):
+            if value.isdigit():
+                return ModelBase.from_timestamp(float(value))
+            try:
+                return ModelBase.ensure_utc(
+                    datetime.fromisoformat(value.replace("Z", "+00:00"))
+                )
+            except ValueError:
+                pass
         if isinstance(value, datetime):
             return ModelBase.ensure_utc(value)
         raise ValueError("Unsupported timestamp value")
 
     @field_validator("media", mode="before")
     @classmethod
-    def _coerce_media(cls, value: Any) -> Tuple[MediaAsset, ...]:
+    def _coerce_media(cls, value: Any) -> tuple[MediaAsset, ...]:
         if value is None:
             return tuple()
         if isinstance(value, Iterable):
@@ -86,8 +94,8 @@ class TweetThread(ModelBase):
     """Full thread captured for a given author."""
 
     author_handle: str
-    tweets: Tuple[TweetSegment, ...]
-    collected_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    tweets: tuple[TweetSegment, ...]
+    collected_at: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
     source: str = Field(default="twitter")
 
     @model_validator(mode="after")
@@ -105,14 +113,14 @@ class TweetThread(ModelBase):
         return self.root.tweet_id
 
     @property
-    def tweet_ids(self) -> Tuple[str, ...]:
+    def tweet_ids(self) -> tuple[str, ...]:
         return tuple(segment.tweet_id for segment in self.tweets)
 
     @classmethod
     def from_legacy(cls, author_handle: str, legacy_record: dict[str, Any]) -> "TweetThread":
         """Create a thread from the legacy JSON schema."""
 
-        def build_media(items: list[dict[str, Any]], media_type: MediaType) -> Tuple[MediaAsset, ...]:
+        def build_media(items: list[dict[str, Any]], media_type: MediaType) -> tuple[MediaAsset, ...]:
             return tuple(
                 MediaAsset(
                     media_id=item.get("ID", ""),
@@ -139,7 +147,11 @@ class TweetThread(ModelBase):
             segments.append(build_segment(child))
 
         collected_reference = legacy_record.get("Timestamp", 0)
-        collected_at = ModelBase.from_timestamp(collected_reference) if collected_reference else datetime.now(tz=timezone.utc)
+        collected_at = (
+            ModelBase.from_timestamp(collected_reference)
+            if collected_reference
+            else datetime.now(tz=UTC)
+        )
 
         return cls(author_handle=author_handle, tweets=tuple(segments), collected_at=collected_at)
 

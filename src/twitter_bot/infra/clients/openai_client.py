@@ -3,21 +3,17 @@
 from __future__ import annotations
 
 import time
-from typing import Sequence
+from collections.abc import Sequence
 
 try:  # pragma: no cover - optional dependency
-    from openai import APIError, OpenAI, RateLimitError
+    from openai import APIError, OpenAI
+    from openai import RateLimitError as OpenAIRateLimitError
     from openai.types.chat import ChatCompletion
 except ImportError:  # pragma: no cover - fallback used in tests/offline
     class APIError(Exception):
         pass
 
-    class RateLimitError(APIError):
-        def __init__(self, message: str, request=None, response=None) -> None:
-            super().__init__(message)
-            self.message = message
-            self.request = request
-            self.response = response
+    OpenAIRateLimitError = None
 
     class OpenAI:  # type: ignore[no-redef]
         def __init__(self, *_, **__):
@@ -26,6 +22,23 @@ except ImportError:  # pragma: no cover - fallback used in tests/offline
     class ChatCompletion:  # minimal stub for typing
         def __init__(self, choices):
             self.choices = choices
+
+
+class RateLimitError(Exception):
+    """Compatibility wrapper mirroring the legacy OpenAI RateLimitError signature."""
+
+    def __init__(self, message: str, request=None, response=None) -> None:
+        super().__init__(message)
+        self.message = message
+        self.request = request
+        self.response = response
+
+
+RATE_LIMIT_EXCEPTIONS: tuple[type[Exception], ...]
+if OpenAIRateLimitError is not None:
+    RATE_LIMIT_EXCEPTIONS = (RateLimitError, OpenAIRateLimitError)
+else:
+    RATE_LIMIT_EXCEPTIONS = (RateLimitError,)
 
 from twitter_bot.interfaces.translation_provider import TranslationProvider
 from twitter_bot.models import TweetThread
@@ -100,7 +113,7 @@ class OpenAITranslationClient(TranslationProvider):
                 return self._client.chat.completions.create(
                     timeout=self._timeout, **payload
                 )
-            except RateLimitError as exc:  # pragma: no cover - requires live API
+            except RATE_LIMIT_EXCEPTIONS:
                 if attempt == self._max_retries:
                     raise
                 time.sleep(delay)
