@@ -1,11 +1,11 @@
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence
 
 import pytest
 
-from twitter_bot.config import settings as settings_module
-from twitter_bot.interfaces.storage import TranslationRepository, TweetRepository
-from twitter_bot.models import (
+from xbot.config import settings as settings_module
+from xbot.interfaces.storage import TranslationRepository, TweetRepository
+from xbot.models import (
     MediaAsset,
     MediaType,
     TranslationRecord,
@@ -14,7 +14,7 @@ from twitter_bot.models import (
     TweetSegment,
     TweetThread,
 )
-from twitter_bot.services.publishing import PublishReport, PublisherService
+from xbot.services.publishing import PublishReport, PublisherService
 
 
 class InMemoryTweetRepository(TweetRepository):
@@ -59,7 +59,7 @@ class InMemoryTranslationRepository(TranslationRepository):
 
 @dataclass
 class FakePublisherClient:
-    posts: List[dict]
+    posts: list[dict]
 
     def post_tweet(
         self,

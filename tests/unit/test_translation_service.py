@@ -1,10 +1,10 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Dict, List, Sequence
 
-from twitter_bot.interfaces.storage import TranslationRepository, TweetRepository
-from twitter_bot.interfaces.translation_provider import TranslationProvider
-from twitter_bot.models import TranslationRecord, TranslationSegment, TweetSegment, TweetThread
-from twitter_bot.services.translation import TranslationResult, TranslationService
+from xbot.interfaces.storage import TranslationRepository, TweetRepository
+from xbot.interfaces.translation_provider import TranslationProvider
+from xbot.models import TranslationRecord, TranslationSegment, TweetSegment, TweetThread
+from xbot.services.translation import TranslationResult, TranslationService
 
 
 class InMemoryTweetRepository(TweetRepository):
@@ -49,8 +49,8 @@ class InMemoryTranslationRepository(TranslationRepository):
 
 @dataclass
 class FakeProvider(TranslationProvider):
-    generated: Dict[str, Sequence[str]]
-    titles_requested: List[int]
+    generated: dict[str, Sequence[str]]
+    titles_requested: list[int]
 
     def translate_segments(self, thread: TweetThread) -> Sequence[str]:
         output = tuple(f"translated:{segment.text}" for segment in thread.tweets)
@@ -85,7 +85,7 @@ def test_translate_thread_creates_record(monkeypatch):
     tweet_repo.upsert(make_thread("800", "handle"))
 
     monkeypatch.setenv("ENABLE_TRANSLATION_TITLES", "true")
-    from twitter_bot.config import settings as settings_module
+    from xbot.config import settings as settings_module
 
     settings_module.get_settings.cache_clear()  # type: ignore[attr-defined]
 
@@ -115,7 +115,7 @@ def test_manual_prompts(monkeypatch):
     tweet_repo.upsert(make_thread("900", "handle"))
 
     monkeypatch.setenv("ENABLE_TRANSLATION_TITLES", "false")
-    from twitter_bot.config import settings as settings_module
+    from xbot.config import settings as settings_module
 
     settings_module.get_settings.cache_clear()  # type: ignore[attr-defined]
 
@@ -141,7 +141,7 @@ def test_translate_pending(monkeypatch):
     tweet_repo.upsert(make_thread("911", "handle"))
 
     monkeypatch.setenv("ENABLE_TRANSLATION_TITLES", "false")
-    from twitter_bot.config import settings as settings_module
+    from xbot.config import settings as settings_module
 
     settings_module.get_settings.cache_clear()  # type: ignore[attr-defined]
 
@@ -155,5 +155,4 @@ def test_translate_pending(monkeypatch):
     assert len(results) == 2
     assert translation_repo.get("910") is not None
     assert translation_repo.get("911") is not None
-
 

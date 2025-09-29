@@ -2,7 +2,7 @@
 
 ## Prerequisites
 - Python 3.11+
-- Twitter API credentials (consumer key/secret, per-account tokens)
+- X API credentials (consumer key/secret, per-account tokens)
 - Telegram bot token, API ID, and hash
 - OpenAI API key
 
@@ -18,39 +18,39 @@
    TELEGRAM_API_HASH=...
    OPENAI_API_KEY=...
    ```
-3. Optional values (with defaults) are documented in `twitter_bot/config/settings.py` docstrings.
+3. Optional values (with defaults) are documented in `xbot/config/settings.py` docstrings.
 
 ## Common Tasks
 - **Initial migration**
   ```bash
-  poetry run twitter-bot migrate from-legacy --source twitter_bot-main
+  poetry run xbot migrate from-legacy --source legacy_data_dump
   ```
 - **Scrape all watched accounts**
   ```bash
-  poetry run twitter-bot scrape all
+  poetry run xbot scrape all
   ```
 - **Translate a tweet/thread**
   ```bash
-  poetry run twitter-bot translate tweet --tweet-id 1234567890
+  poetry run xbot translate tweet --tweet-id 1234567890
   ```
 - **Publish translated thread**
   ```bash
-  poetry run twitter-bot publish tweet --tweet-id 1234567890 --profile default
+  poetry run xbot publish tweet --tweet-id 1234567890 --profile default
   ```
 - **Queue jobs for later execution**
   ```bash
-  poetry run twitter-bot schedule enqueue-translate 1234567890 --run-at "2024-07-21T14:00:00Z"
-  poetry run twitter-bot schedule run
+  poetry run xbot schedule enqueue-translate 1234567890 --run-at "2024-07-21T14:00:00Z"
+  poetry run xbot schedule run
   ```
 - **Review stored translations**
   ```bash
-  poetry run twitter-bot review translations
-  poetry run twitter-bot review show 1234567890
-  poetry run twitter-bot review export 1234567890 exports/1234567890.txt
+  poetry run xbot review translations
+  poetry run xbot review show 1234567890
+  poetry run xbot review export 1234567890 exports/1234567890.txt
   ```
 - **Run the Telegram bot**
   ```bash
-  poetry run twitter-bot telegram run
+  poetry run xbot telegram run
   ```
 
 ## File Layout
@@ -60,7 +60,7 @@
 
 ## Backups
 - Schedule regular copies of `var/data/` and job states.
-- Use `twitter-bot review export` to extract individual translations for archival sharing.
+- Use `xbot review export` to extract individual translations for archival sharing.
 
 ## Troubleshooting
 - **Translation failures** - inspect `var/logs/translation.log` and re-run with `--manual` to obtain prompt.

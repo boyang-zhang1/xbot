@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from twitter_bot.infra.repositories.json_store import (
+from xbot.infra.repositories.json_store import (
     JSONTranslationRepository,
     JSONTweetRepository,
 )
-from twitter_bot.models import TranslationRecord, TranslationSegment, TweetSegment, TweetThread
+from xbot.models import TranslationRecord, TranslationSegment, TweetSegment, TweetThread
 
 
 def build_thread(root_id: str = "200") -> TweetThread:
@@ -59,5 +59,4 @@ def test_translation_repository_roundtrip(tmp_path: Path) -> None:
 
     repo.delete("400")
     assert repo.get("400") is None
-
 

@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from twitter_bot.models import MediaType, TweetThread
+from xbot.models import MediaType, TweetThread
 
 
 def test_thread_from_legacy_converts_media_and_children():
@@ -28,6 +28,5 @@ def test_thread_from_legacy_converts_media_and_children():
     assert thread.tweet_ids == ("100", "101")
     assert thread.root.media[0].media_type == MediaType.PHOTO
     assert thread.tweets[1].media[0].media_type == MediaType.VIDEO
-    assert thread.root.timestamp == datetime.fromtimestamp(1_700_000_000, tz=timezone.utc)
-
+    assert thread.root.timestamp == datetime.fromtimestamp(1_700_000_000, tz=UTC)
 

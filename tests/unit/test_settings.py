@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from twitter_bot.config import settings as settings_module
+from xbot.config import settings as settings_module
 
 
 def test_settings_parses_environment(monkeypatch, tmp_path):

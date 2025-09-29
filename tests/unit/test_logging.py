@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from twitter_bot.config import settings as settings_module
-from twitter_bot.utils.logging import configure_logging
+from xbot.config import settings as settings_module
+from xbot.utils.logging import configure_logging
 
 
 def test_configure_logging_creates_log_file(tmp_path, monkeypatch):
@@ -15,7 +15,6 @@ def test_configure_logging_creates_log_file(tmp_path, monkeypatch):
     logger = configure_logging(settings_module.get_settings())
 
     assert log_dir.exists()
-    log_file = log_dir / "twitter_bot.log"
+    log_file = log_dir / "xbot.log"
     assert log_file.exists()
     logger.info("structured message")
-

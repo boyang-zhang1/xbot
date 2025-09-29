@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "twitter-bot"
+name = "xbot"
 version = "0.1.0"
-description = "Modernised toolkit for scraping, translating, and publishing curated Twitter threads."
+description = "Modernised toolkit for scraping, translating, and publishing curated X threads."
 authors = ["XBot Maintainers <maintainers@example.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{ include = "twitter_bot", from = "src" }]
+packages = [{ include = "xbot", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -37,7 +37,7 @@ mypy = "^1.9.0"
 pre-commit = "^3.7.0"
 
 [tool.poetry.scripts]
-twitter-bot = "twitter_bot.cli.main:app"
+xbot = "xbot.cli.main:app"
 
 [build-system]
 requires = ["poetry-core>=1.8.0"]
@@ -62,5 +62,5 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 
 [tool.pytest.ini_options]
-addopts = "-ra --strict-markers --strict-config --cov=twitter_bot --cov-report=term-missing"
+addopts = "-ra --strict-markers --strict-config --cov=xbot --cov-report=term-missing"
 asyncio_mode = "strict"

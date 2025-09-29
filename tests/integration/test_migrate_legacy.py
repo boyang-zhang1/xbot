@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
 
-from twitter_bot.cli import migrate as migrate_cli
-from twitter_bot.config import settings as settings_module
-from twitter_bot.infra.repositories.json_store import (
+from xbot.cli import migrate as migrate_cli
+from xbot.config import settings as settings_module
+from xbot.infra.repositories.json_store import (
     JSONTranslationRepository,
     JSONTweetRepository,
 )
-from twitter_bot.models import TranslationRecord, TweetThread
+from xbot.models import TranslationRecord, TweetThread
 
 
 def write_legacy_payload(tmp_path: Path) -> Path:
@@ -86,4 +86,3 @@ def test_migrate_from_legacy(tmp_path, monkeypatch):
     assert isinstance(thread, TweetThread)
     assert isinstance(translation, TranslationRecord)
     assert translation.titles == ("Title 1", "Title 2")
-

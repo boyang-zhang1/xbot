@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import Dict, List, Sequence
+from typing import Sequence
 
-from twitter_bot.interfaces.storage import TweetRepository
-from twitter_bot.interfaces.twitter_client import ScraperClient
-from twitter_bot.models import TweetSegment, TweetThread
-from twitter_bot.services.scraping import ScraperService
+from xbot.interfaces.storage import TweetRepository
+from xbot.interfaces.x_client import ScraperClient
+from xbot.models import TweetSegment, TweetThread
+from xbot.services.scraping import ScraperService
 
 
 class InMemoryTweetRepository(TweetRepository):
@@ -29,7 +29,7 @@ class InMemoryTweetRepository(TweetRepository):
 
 @dataclass
 class StaticScraperClient(ScraperClient):
-    threads: Dict[str, List[TweetThread]]
+    threads: dict[str, list[TweetThread]]
 
     def fetch_threads(self, author_handle: str, limit: int = 40) -> Sequence[TweetThread]:
         return self.threads.get(author_handle, [])[:limit]
@@ -51,7 +51,7 @@ def test_scraper_service_sync_handle(monkeypatch):
     client = StaticScraperClient(threads=threads)
 
     monkeypatch.setenv("TWITTER_SCRAPER_HANDLES", "handle")
-    from twitter_bot.config import settings as settings_module
+    from xbot.config import settings as settings_module
 
     settings_module.get_settings.cache_clear()  # type: ignore[attr-defined]
 
@@ -73,7 +73,7 @@ def test_scraper_service_sync_all(monkeypatch):
     client = StaticScraperClient(threads=threads)
 
     monkeypatch.setenv("TWITTER_SCRAPER_HANDLES", "alpha,beta")
-    from twitter_bot.config import settings as settings_module
+    from xbot.config import settings as settings_module
 
     settings_module.get_settings.cache_clear()  # type: ignore[attr-defined]
 
@@ -85,5 +85,3 @@ def test_scraper_service_sync_all(monkeypatch):
     assert summary.total_stored == 2
     assert repo.get("700") is not None
     assert repo.get("701") is not None
-
-

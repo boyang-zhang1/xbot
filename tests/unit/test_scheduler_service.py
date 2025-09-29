@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from twitter_bot.interfaces.storage import JobRepository
-from twitter_bot.models import JobStatus, ScheduledJob
-from twitter_bot.services.scheduling import SchedulerService
+from xbot.interfaces.storage import JobRepository
+from xbot.models import JobStatus, ScheduledJob
+from xbot.services.scheduling import SchedulerService
 
 
 class InMemoryJobRepository(JobRepository):
@@ -61,9 +61,8 @@ def test_scheduler_respects_run_at():
     executed: list[str] = []
 
     service.register_handler("future", lambda job: executed.append(job.job_id))
-    future = datetime.now(tz=timezone.utc) + timedelta(hours=1)
+    future = datetime.now(tz=UTC) + timedelta(hours=1)
     service.enqueue("future", run_at=future)
 
-    assert service.run_pending(now=datetime.now(tz=timezone.utc)) == ()
+    assert service.run_pending(now=datetime.now(tz=UTC)) == ()
     assert executed == []
-

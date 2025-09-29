@@ -2,9 +2,9 @@ import types
 
 import pytest
 
-from twitter_bot.infra.clients import openai_client
-from twitter_bot.infra.clients.openai_client import OpenAITranslationClient
-from twitter_bot.models import TweetSegment, TweetThread
+from xbot.infra.clients import openai_client
+from xbot.infra.clients.openai_client import OpenAITranslationClient
+from xbot.models import TweetSegment, TweetThread
 
 
 class DummyCompletion:
@@ -110,4 +110,3 @@ def test_openai_client_exhausts_retries(monkeypatch):
 
     with pytest.raises(openai_client.RateLimitError):
         client.translate_segments(thread)
-

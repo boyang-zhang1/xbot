@@ -1,11 +1,11 @@
-# Twitter Bot Toolkit
+# XBot Toolkit
 
-A production-grade toolkit that monitors curated Twitter accounts, translates their long-form threads into polished Simplified Chinese, and republishes translations through Twitter and a Telegram operator bot.
+A production-grade toolkit that monitors curated X accounts, translates their long-form threads into polished Simplified Chinese, and republishes translations through X and a Telegram operator bot.
 
 ## Features
 - Account watchlists with incremental scraping and credential rotation (Tweety-powered client)
 - Translation pipeline with OpenAI integration, retry/backoff, and manual override workflows
-- Twitter publishing with thread support, media handling, templated closing messages, and duplicate safeguards
+- X publishing with thread support, media handling, templated closing messages, and duplicate safeguards
 - Telegram control bot plus review CLI for operators to inspect, export, and queue work
 - Lightweight scheduler with JSON-backed job store for scrape/translate/publish automation
 - Structured logging, typed configuration, and CI-ready tooling for automated quality gates
@@ -18,14 +18,14 @@ A production-grade toolkit that monitors curated Twitter accounts, translates th
 2. **Configure secrets** by creating a `.env` file and populating the environment variables described in `docs/operations.md`.
 3. **Run migrations** to bring legacy JSON exports into the new storage layout:
    ```bash
-   poetry run twitter-bot migrate from-legacy --source twitter_bot-main
+   poetry run xbot migrate from-legacy --source legacy_data_dump
    ```
 4. **Scrape, translate, schedule, review, and publish** via the CLI or Telegram bot.
 
 See `docs/operations.md` for full instructions and runbooks.
 
 ## Repository Layout
-- `src/twitter_bot/` - Source package with services, models, and interfaces
+- `src/xbot/` - Source package with services, models, and interfaces
 - `tests/` - Unit and integration test suites
 - `scripts/` - Utility scripts (migrations, data seeding)
 - `docs/` - Architecture and operations documentation

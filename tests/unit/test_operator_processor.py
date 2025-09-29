@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from twitter_bot.services.operator import CommandContext, CommandProcessor
+from xbot.services.operator import CommandContext, CommandProcessor
 
 
 @dataclass
