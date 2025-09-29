@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from xbot.interfaces.storage import TranslationRepository, TweetRepository
 from xbot.interfaces.translation_provider import TranslationProvider
-from xbot.models import TranslationRecord, TranslationSegment, TweetSegment, TweetThread
+from xbot.models import TranslationRecord, TweetSegment, TweetThread
 from xbot.services.translation import TranslationResult, TranslationService
 
 

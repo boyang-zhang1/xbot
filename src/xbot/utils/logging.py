@@ -6,25 +6,25 @@ import logging
 import logging.config
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 try:  # pragma: no cover - structure depends on optional dependency
     import structlog
 except ImportError:  # pragma: no cover - fallback for constrained envs
-    structlog = None  # type: ignore[assignment]
+    structlog = cast(Any, None)
 
 try:  # pragma: no cover - optional dependency
     from pythonjsonlogger import jsonlogger
 except ImportError:  # pragma: no cover - fallback
-    jsonlogger = None  # type: ignore[assignment]
+    jsonlogger = cast(Any, None)
 
 from xbot.config.settings import Settings, get_settings
 
 DEFAULT_LOG_LEVEL = "INFO"
 
 
-@lru_cache()
-def configure_logging(settings: Settings | None = None) -> structlog.BoundLogger:
+@lru_cache
+def configure_logging(settings: Settings | None = None) -> Any:
     """Configure structlog + standard logging and return a bound logger.
 
     The configuration writes JSON-formatted logs to ``settings.log_root`` while

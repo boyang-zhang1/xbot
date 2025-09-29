@@ -2,7 +2,6 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 import pytest
-
 from xbot.config import settings as settings_module
 from xbot.interfaces.storage import TranslationRepository, TweetRepository
 from xbot.models import (
@@ -14,7 +13,7 @@ from xbot.models import (
     TweetSegment,
     TweetThread,
 )
-from xbot.services.publishing import PublishReport, PublisherService
+from xbot.services.publishing import PublisherService, PublishReport
 
 
 class InMemoryTweetRepository(TweetRepository):

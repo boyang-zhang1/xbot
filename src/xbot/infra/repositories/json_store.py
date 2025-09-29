@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import threading
 from pathlib import Path
+from typing import Any
 
 from xbot.interfaces.storage import JobRepository, TranslationRepository, TweetRepository
 from xbot.models import ScheduledJob, TranslationRecord, TweetThread
@@ -14,9 +15,9 @@ class _BaseJSONRepository:
     def __init__(self, storage_path: Path) -> None:
         self._storage_path = storage_path
         self._lock = threading.Lock()
-        self._cache: dict[str, dict] | None = None
+        self._cache: dict[str, dict[str, Any]] | None = None
 
-    def _load(self) -> dict[str, dict]:
+    def _load(self) -> dict[str, dict[str, Any]]:
         if self._cache is None:
             self._cache = read_json_file(self._storage_path, default={})
         return self._cache

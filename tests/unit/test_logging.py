@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from xbot.config import settings as settings_module
 from xbot.utils.logging import configure_logging

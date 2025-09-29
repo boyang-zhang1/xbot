@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import Field
 
@@ -25,20 +25,20 @@ class ScheduledJob(ModelBase):
 
     job_id: str
     name: str
-    payload: Dict[str, Any] = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict)
     run_at: datetime
     status: JobStatus = Field(default=JobStatus.PENDING)
     last_error: str | None = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
 
-    def mark_running(self) -> "ScheduledJob":
+    def mark_running(self) -> ScheduledJob:
         return self._with_status(JobStatus.RUNNING)
 
-    def mark_completed(self) -> "ScheduledJob":
+    def mark_completed(self) -> ScheduledJob:
         return self._with_status(JobStatus.COMPLETED, clear_error=True)
 
-    def mark_failed(self, error: str) -> "ScheduledJob":
+    def mark_failed(self, error: str) -> ScheduledJob:
         return self._with_status(JobStatus.FAILED, error=error)
 
     def _with_status(
@@ -47,10 +47,10 @@ class ScheduledJob(ModelBase):
         *,
         error: str | None = None,
         clear_error: bool = False,
-    ) -> "ScheduledJob":
+    ) -> ScheduledJob:
         updated = {
             "status": status,
-            "updated_at": datetime.now(tz=timezone.utc),
+            "updated_at": datetime.now(tz=UTC),
         }
         if clear_error:
             updated["last_error"] = None

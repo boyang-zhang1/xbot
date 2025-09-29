@@ -107,7 +107,7 @@ class PublisherSettings(BaseSettings):
     def _coerce_csv(cls, value: str | Iterable[str] | None) -> tuple[str, ...]:
         return _split_csv(value)
 
-    def model_post_init(self, __context: Any) -> None:  # type: ignore[override]
+    def model_post_init(self, __context: Any) -> None:
         lookup = {
             "consumer_keys": "CONSUMER_KEYS",
             "consumer_secrets": "CONSUMER_SECRETS",
@@ -191,7 +191,7 @@ class Settings:
         return self.paths.log_dir
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Return cached application settings instance."""
 

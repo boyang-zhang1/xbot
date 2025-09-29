@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from xbot.interfaces.storage import TweetRepository
 from xbot.interfaces.x_client import ScraperClient

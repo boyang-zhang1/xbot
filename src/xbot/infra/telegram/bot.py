@@ -35,7 +35,7 @@ class TelegramOperatorBot:
         await self._client.start(bot_token=self._settings.telegram.bot_token)
 
         @self._client.on(events.NewMessage(from_users=[self._settings.telegram.operator_chat_id]))
-        async def handler(event):  # type: ignore[no-redef]
+        async def handler(event: events.NewMessage.Event) -> None:
             response = self._processor.handle(event.raw_text or "")
             await event.respond(response)
 

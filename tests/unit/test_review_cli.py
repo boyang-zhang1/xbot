@@ -1,12 +1,16 @@
 from pathlib import Path
 
 from typer.testing import CliRunner
-
 from xbot.cli import review
 from xbot.config import settings as settings_module
-from xbot.models import TranslationRecord, TranslationSegment, TranslationStatus, TweetSegment, TweetThread
+from xbot.models import (
+    TranslationRecord,
+    TranslationSegment,
+    TranslationStatus,
+    TweetSegment,
+    TweetThread,
+)
 from xbot.services.factory import translation_repository, tweet_repository
-
 
 runner = CliRunner()
 

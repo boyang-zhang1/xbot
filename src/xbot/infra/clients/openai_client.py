@@ -4,25 +4,32 @@ from __future__ import annotations
 
 import time
 from collections.abc import Sequence
+from typing import Any, cast
+
+from xbot.interfaces.translation_provider import TranslationProvider
+from xbot.models import TweetThread
 
 try:  # pragma: no cover - optional dependency
-    from openai import APIError, OpenAI
-    from openai import RateLimitError as OpenAIRateLimitError
+    from openai import APIError as _OpenAIAPIError
+    from openai import OpenAI as OpenAIClient
+    from openai import RateLimitError as _OpenAIRateLimitError
     from openai.types.chat import ChatCompletion
 except ImportError:  # pragma: no cover - fallback used in tests/offline
-    class APIError(Exception):
-        pass
+    _OpenAIRateLimitError = None
 
-    OpenAIRateLimitError = None
+    class _OpenAIAPIError(Exception):
+        """Fallback API error when openai package is unavailable."""
 
-    class OpenAI:  # type: ignore[no-redef]
-        def __init__(self, *_, **__):
+    class OpenAIClient:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             raise RuntimeError("openai package is not installed")
 
     class ChatCompletion:  # minimal stub for typing
-        def __init__(self, choices):
+        def __init__(self, choices: Any) -> None:
             self.choices = choices
 
+APIError = _OpenAIAPIError
+OpenAI = OpenAIClient
 
 class RateLimitError(Exception):
     """Compatibility wrapper mirroring the legacy OpenAI RateLimitError signature."""
@@ -33,15 +40,13 @@ class RateLimitError(Exception):
         self.request = request
         self.response = response
 
-
-RATE_LIMIT_EXCEPTIONS: tuple[type[Exception], ...]
-if OpenAIRateLimitError is not None:
-    RATE_LIMIT_EXCEPTIONS = (RateLimitError, OpenAIRateLimitError)
+if _OpenAIRateLimitError is not None:
+    RATE_LIMIT_EXCEPTIONS: tuple[type[Exception], ...] = (
+        RateLimitError,
+        cast(type[Exception], _OpenAIRateLimitError),
+    )
 else:
     RATE_LIMIT_EXCEPTIONS = (RateLimitError,)
-
-from xbot.interfaces.translation_provider import TranslationProvider
-from xbot.models import TweetThread
 
 TRANSLATION_SYSTEM_PROMPT = (
     "You specialise in translating knowledge-dense X threads into Simplified Chinese while"

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Protocol, Sequence
+from collections.abc import Iterable, Sequence
+from typing import Protocol
 
 from xbot.models import ScheduledJob, TranslationRecord, TweetThread
 

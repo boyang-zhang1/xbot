@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
+from typing import Any, cast
 
 from xbot.interfaces.x_client import ScraperClient
 from xbot.models import MediaType, TweetThread
@@ -11,7 +12,7 @@ from xbot.models import MediaType, TweetThread
 try:  # pragma: no cover - optional dependency
     from tweety import Twitter
 except ImportError:  # pragma: no cover - optional dependency
-    Twitter = None  # type: ignore[assignment]
+    Twitter = cast(Any, None)
 
 
 class TweetyScraperClient(ScraperClient):
@@ -53,7 +54,7 @@ class TweetyScraperClient(ScraperClient):
             raise RuntimeError(f"Failed to scrape {author_handle}: {errors[-1]}")
         return []
 
-    def _fetch_with_client(self, client: "Twitter", author_handle: str, limit: int) -> list[TweetThread]:
+    def _fetch_with_client(self, client: Any, author_handle: str, limit: int) -> list[TweetThread]:
         raw = client.get_tweets(username=author_handle, pages=self._pages_per_request)
         tweets = []
         for item in getattr(raw, "tweets", []):
@@ -72,7 +73,7 @@ class TweetyScraperClient(ScraperClient):
     def _session_path(self, username: str) -> Path:
         return self._session_dir / f"x_session_{username}.json"
 
-    def _get_session(self, username: str) -> "Twitter":  # pragma: no cover - network
+    def _get_session(self, username: str) -> Any:  # pragma: no cover - network
         if username in self._sessions:
             return self._sessions[username]
 
@@ -99,7 +100,7 @@ class TweetyScraperClient(ScraperClient):
         return TweetThread.from_legacy(author_handle, payload)
 
 
-def _build_legacy_payload(item: object) -> dict | None:
+def _build_legacy_payload(item: Any) -> dict[str, Any] | None:
     """Transform tweety tweet objects into the legacy payload expected by TweetThread."""
 
     tweet_id = getattr(item, "id", None)
@@ -108,8 +109,8 @@ def _build_legacy_payload(item: object) -> dict | None:
     if not tweet_id or text is None:
         return None
 
-    def serialise_media(collection, media_type: MediaType) -> list[dict]:
-        serialised: list[dict] = []
+    def serialise_media(collection: Any, media_type: MediaType) -> list[dict[str, Any]]:
+        serialised: list[dict[str, Any]] = []
         for media in collection or []:
             media_id = getattr(media, "id", "")
             url = getattr(media, "url", "")
@@ -117,7 +118,7 @@ def _build_legacy_payload(item: object) -> dict | None:
             serialised.append({"ID": media_id, "URL": url, "Preview": preview, "media_type": media_type.value})
         return serialised
 
-    def to_timestamp(value) -> float:
+    def to_timestamp(value: Any) -> float:
         if hasattr(value, "timestamp"):
             return float(value.timestamp())
         return float(value)

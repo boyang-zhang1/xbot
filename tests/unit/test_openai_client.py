@@ -1,7 +1,6 @@
 import types
 
 import pytest
-
 from xbot.infra.clients import openai_client
 from xbot.infra.clients.openai_client import OpenAITranslationClient
 from xbot.models import TweetSegment, TweetThread

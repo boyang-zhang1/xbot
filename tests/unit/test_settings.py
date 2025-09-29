@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 from xbot.config import settings as settings_module
 
 

@@ -2,8 +2,8 @@
 
 from .base import ModelBase
 from .job import JobStatus, ScheduledJob
-from .tweet import LegacyThreadPayload, MediaAsset, MediaType, TweetSegment, TweetThread
 from .translation import TranslationRecord, TranslationSegment, TranslationStatus
+from .tweet import LegacyThreadPayload, MediaAsset, MediaType, TweetSegment, TweetThread
 
 __all__ = [
     "LegacyThreadPayload",

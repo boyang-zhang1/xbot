@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from enum import Enum
-from collections.abc import Iterable
 from typing import Any
 
 from pydantic import Field, field_validator, model_validator
@@ -48,7 +48,7 @@ class TweetSegment(ModelBase):
     @field_validator("timestamp", mode="before")
     @classmethod
     def _coerce_timestamp(cls, value: Any) -> datetime:
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return ModelBase.from_timestamp(value)
         if isinstance(value, str):
             if value.isdigit():
@@ -69,23 +69,22 @@ class TweetSegment(ModelBase):
         if value is None:
             return tuple()
         if isinstance(value, Iterable):
-            assets = []
+            assets: list[MediaAsset] = []
             for item in value:
                 if isinstance(item, MediaAsset):
                     assets.append(item)
-                elif isinstance(item, dict):
-                    inferred_type = item.get("media_type") or item.get("type")
-                    if not inferred_type:
-                        inferred_type = MediaType.PHOTO.value
-                    asset = MediaAsset(
-                        media_id=item.get("ID") or item.get("media_id"),
-                        url=item.get("URL") or item.get("url"),
-                        preview_url=item.get("Preview") or item.get("preview_url"),
-                        media_type=MediaType(inferred_type.lower()),
-                    )
-                    assets.append(asset)
-                else:
-                    raise ValueError("Unsupported media payload")
+                    continue
+                if isinstance(item, dict):
+                    inferred_type = (item.get("media_type") or item.get("type")) or MediaType.PHOTO.value
+                    payload = {
+                        "ID": item.get("ID") or item.get("media_id") or "",
+                        "URL": item.get("URL") or item.get("url") or "",
+                        "Preview": item.get("Preview") or item.get("preview_url"),
+                        "media_type": inferred_type,
+                    }
+                    assets.append(MediaAsset.model_validate(payload))
+                    continue
+                raise ValueError("Unsupported media payload")
             return tuple(assets)
         raise ValueError("Unsupported media payload")
 
@@ -99,7 +98,7 @@ class TweetThread(ModelBase):
     source: str = Field(default="x")
 
     @model_validator(mode="after")
-    def _ensure_tweets(self) -> "TweetThread":
+    def _ensure_tweets(self) -> TweetThread:
         if not self.tweets:
             raise ValueError("A thread must contain at least one tweet segment")
         return self
@@ -117,19 +116,20 @@ class TweetThread(ModelBase):
         return tuple(segment.tweet_id for segment in self.tweets)
 
     @classmethod
-    def from_legacy(cls, author_handle: str, legacy_record: dict[str, Any]) -> "TweetThread":
+    def from_legacy(cls, author_handle: str, legacy_record: dict[str, Any]) -> TweetThread:
         """Create a thread from the legacy JSON schema."""
 
         def build_media(items: list[dict[str, Any]], media_type: MediaType) -> tuple[MediaAsset, ...]:
-            return tuple(
-                MediaAsset(
-                    media_id=item.get("ID", ""),
-                    url=item.get("URL", ""),
-                    preview_url=item.get("Preview"),
-                    media_type=media_type,
-                )
-                for item in items or []
-            )
+            assets: list[MediaAsset] = []
+            for item in items or []:
+                payload = {
+                    "ID": item.get("ID", ""),
+                    "URL": item.get("URL", ""),
+                    "Preview": item.get("Preview"),
+                    "media_type": media_type.value,
+                }
+                assets.append(MediaAsset.model_validate(payload))
+            return tuple(assets)
 
         def build_segment(payload: dict[str, Any]) -> TweetSegment:
             photos = build_media(payload.get("Photos", []), MediaType.PHOTO)

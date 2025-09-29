@@ -2,6 +2,7 @@
 
 from importlib import metadata
 
+
 def get_version() -> str:
     """Return the package version as defined in pyproject.toml."""
     try:

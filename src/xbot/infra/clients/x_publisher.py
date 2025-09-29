@@ -4,23 +4,24 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
+from typing import Any, cast
 
 try:  # pragma: no cover - optional dependency
     import httpx
 except ImportError:  # pragma: no cover - fallback for offline environments
-    httpx = None  # type: ignore[assignment]
+    httpx = cast(Any, None)
 
 try:  # pragma: no cover - optional dependency
     import tweepy
 except ImportError:  # pragma: no cover - raise when attempting to use
-    tweepy = None  # type: ignore[assignment]
+    tweepy = cast(Any, None)
 
 try:  # pragma: no cover - optional dependency
     from requests_oauthlib import OAuth1Session
 except ImportError:  # pragma: no cover
-    OAuth1Session = None  # type: ignore[assignment]
+    OAuth1Session = cast(Any, None)
 
 from xbot.interfaces.x_client import PublisherClient
 
@@ -59,7 +60,7 @@ class TweepyPublisherClient(PublisherClient):
         in_reply_to: str | None = None,
     ) -> str:
         media_ids = self._upload_media(media_urls or [])
-        payload: dict = {"text": text}
+        payload: dict[str, Any] = {"text": text}
         if in_reply_to:
             payload["reply"] = {"in_reply_to_tweet_id": in_reply_to}
         if media_ids:
@@ -67,8 +68,9 @@ class TweepyPublisherClient(PublisherClient):
 
         response = self._oauth.post("https://api.twitter.com/2/tweets", json=payload)
         response.raise_for_status()
-        data = response.json()
-        return data["data"]["id"]
+        data = cast(dict[str, Any], response.json())
+        result = cast(dict[str, Any], data.get("data", {}))
+        return str(result.get("id", ""))
 
     def _upload_media(self, media_urls: Sequence[str]) -> Sequence[str]:
         media_ids: list[str] = []
@@ -80,7 +82,7 @@ class TweepyPublisherClient(PublisherClient):
             finally:
                 if path.exists():
                     path.unlink()
-        return media_ids
+        return tuple(media_ids)
 
     def _download_to_temp(self, url: str) -> Path:
         if httpx is None:  # pragma: no cover - executed when dependency missing

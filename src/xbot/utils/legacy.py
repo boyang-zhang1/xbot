@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
-from collections.abc import Iterable, Iterator
+from typing import Any, cast
 
 from xbot.models import (
     LegacyThreadPayload,
@@ -76,11 +77,12 @@ def _has_media(payload: LegacyThreadPayload) -> bool:
     return bool(payload.get("Photos") or payload.get("Videos"))
 
 
-def _load_json(path: Path) -> dict:
+def _load_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     with path.open("r", encoding="utf-8") as fh:
-        return json.load(fh)
+        data = json.load(fh)
+    return cast(dict[str, Any], data)
 
 
 __all__ = ["load_legacy_threads", "load_legacy_translations", "translation_from_legacy"]

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Tuple
 
 from pydantic import Field, field_validator, model_validator
 
@@ -32,15 +31,15 @@ class TranslationRecord(ModelBase):
 
     author_handle: str
     root_tweet_id: str
-    segments: Tuple[TranslationSegment, ...]
-    titles: Tuple[str, ...] = Field(default_factory=tuple)
+    segments: tuple[TranslationSegment, ...]
+    titles: tuple[str, ...] = Field(default_factory=tuple)
     status: TranslationStatus = Field(default=TranslationStatus.DRAFT)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
     manual_override: bool = False
 
     @model_validator(mode="after")
-    def _ensure_segments(self) -> "TranslationRecord":
+    def _ensure_segments(self) -> TranslationRecord:
         if not self.segments:
             raise ValueError("Translation requires at least one segment")
         return self
@@ -51,23 +50,23 @@ class TranslationRecord(ModelBase):
 
     @field_validator("titles", mode="before")
     @classmethod
-    def _normalize_titles(cls, value: Tuple[str, ...] | str | None) -> Tuple[str, ...]:
+    def _normalize_titles(cls, value: tuple[str, ...] | str | None) -> tuple[str, ...]:
         if value is None:
             return tuple()
         if isinstance(value, str):
             return tuple(part.strip() for part in value.split("||") if part.strip())
         return tuple(value)
 
-    def mark_updated(self) -> "TranslationRecord":
-        return self.model_copy(update={"updated_at": datetime.now(tz=timezone.utc)})
+    def mark_updated(self) -> TranslationRecord:
+        return self.model_copy(update={"updated_at": datetime.now(tz=UTC)})
 
-    def mark_published(self) -> "TranslationRecord":
+    def mark_published(self) -> TranslationRecord:
         """Return a copy flagged as published and refresh timestamps."""
 
         return self.model_copy(
             update={
                 "status": TranslationStatus.PUBLISHED,
-                "updated_at": datetime.now(tz=timezone.utc),
+                "updated_at": datetime.now(tz=UTC),
             }
         )
 

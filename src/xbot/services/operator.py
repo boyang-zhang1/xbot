@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from xbot.services.publishing import PublisherService
 from xbot.services.scraping import ScraperService
@@ -18,7 +18,7 @@ class CommandContext:
     scraper: ScraperService
     translator: TranslationService
     publisher: PublisherService
-    scheduler: "SchedulerService | None" = None
+    scheduler: SchedulerService | None = None
     tweet_repository: object | None = None
     translation_repository: object | None = None
     job_repository: object | None = None
@@ -73,7 +73,7 @@ class CommandProcessor:
             return "Usage: /translate <tweet_id> [--force] [--no-titles]"
         tweet_id = args[0]
         force = "--force" in args
-        include_titles: Optional[bool] = None
+        include_titles: bool | None = None
         if "--no-titles" in args:
             include_titles = False
         result = self._context.translator.translate_thread(
@@ -87,13 +87,14 @@ class CommandProcessor:
             return "Usage: /publish <tweet_id> [--profile default] [--dry-run] [--force]"
         tweet_id = args[0]
         profile = self._extract_option(args, "--profile", default="default")
+        profile_name = profile or "default"
         dry_run = "--dry-run" in args
         force = "--force" in args
         title_index = self._extract_option(args, "--title", default=None)
         title_index_value = int(title_index) if title_index is not None else None
         report = self._context.publisher.publish(
             tweet_id,
-            profile_name=profile,
+            profile_name=profile_name,
             title_index=title_index_value,
             dry_run=dry_run,
             force=force,

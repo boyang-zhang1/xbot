@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Sequence
 
 from xbot.config.settings import Settings, get_settings
 from xbot.interfaces.storage import TranslationRepository, TweetRepository
@@ -111,7 +111,7 @@ class PublisherService:
 
         client = self._client_factory(profile)
 
-        posted_ids: List[str] = []
+        posted_ids: list[str] = []
         reply_to: str | None = None
         for item in plan.items:
             posted_id = client.post_tweet(
@@ -188,16 +188,18 @@ class PublisherService:
         title_index: int | None,
         include_closing: bool,
     ) -> PublishPlan:
-        translation_map: Dict[str, TranslationSegment] = {}
-        for segment in translation.segments:
-            if segment.tweet_id in translation_map:
+        translation_map: dict[str, TranslationSegment] = {}
+        for translation_segment in translation.segments:
+            if translation_segment.tweet_id in translation_map:
                 raise ValueError(
-                    f"Duplicate translation detected for tweet {segment.tweet_id}"
+                    f"Duplicate translation detected for tweet {translation_segment.tweet_id}"
                 )
-            translation_map[segment.tweet_id] = segment
+            translation_map[translation_segment.tweet_id] = translation_segment
 
         missing = [
-            segment.tweet_id for segment in thread.tweets if segment.tweet_id not in translation_map
+            tweet_segment.tweet_id
+            for tweet_segment in thread.tweets
+            if tweet_segment.tweet_id not in translation_map
         ]
         if missing:
             missing_ids = ", ".join(missing)
@@ -211,20 +213,20 @@ class PublisherService:
             extra_ids = ", ".join(extras)
             raise ValueError(f"Translations reference unknown tweets: {extra_ids}")
 
-        items: List[PublishItem] = []
-        for idx, segment in enumerate(thread.tweets):
-            translation_segment = translation_map[segment.tweet_id]
+        items: list[PublishItem] = []
+        for idx, tweet_segment in enumerate(thread.tweets):
+            translation_segment = translation_map[tweet_segment.tweet_id]
             text = translation_segment.text
             if idx == 0 and title_index is not None:
                 title = self._select_title(translation, title_index)
                 text = f"[{title}]\n\n{text}"
             ensure_within_limit(text)
-            media_urls = tuple(asset.url for asset in segment.media)
+            media_urls = tuple(asset.url for asset in tweet_segment.media)
             items.append(
                 PublishItem(
                     text=text,
                     media_urls=media_urls,
-                    source_tweet_id=segment.tweet_id,
+                    source_tweet_id=tweet_segment.tweet_id,
                 )
             )
 

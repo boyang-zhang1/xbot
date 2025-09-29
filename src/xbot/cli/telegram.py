@@ -5,7 +5,6 @@ from __future__ import annotations
 import typer
 
 from xbot.config.settings import get_settings
-from xbot.infra.telegram.bot import TelegramOperatorBot
 from xbot.infra.clients.openai_client import OpenAITranslationClient
 from xbot.infra.clients.x_publisher import TweepyPublisherClient
 from xbot.infra.clients.x_scraper import TweetyScraperClient
@@ -13,6 +12,7 @@ from xbot.infra.repositories.json_store import (
     JSONTranslationRepository,
     JSONTweetRepository,
 )
+from xbot.infra.telegram.bot import TelegramOperatorBot
 from xbot.services.operator import CommandContext
 from xbot.services.publishing import PublisherService
 from xbot.services.scraping import ScraperService

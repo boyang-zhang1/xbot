@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from xbot.config.settings import Settings
 from xbot.infra.clients.openai_client import OpenAITranslationClient
 from xbot.infra.clients.x_publisher import TweepyPublisherClient
@@ -11,6 +13,7 @@ from xbot.infra.repositories.json_store import (
     JSONTranslationRepository,
     JSONTweetRepository,
 )
+from xbot.models import ScheduledJob
 from xbot.services.publishing import PublisherService
 from xbot.services.scheduling import SchedulerService
 from xbot.services.scraping import ScraperService
@@ -58,7 +61,7 @@ def build_translation_service(settings: Settings) -> TranslationService:
 
 
 def build_publisher_service(settings: Settings) -> PublisherService:
-    def factory(profile):
+    def factory(profile: Any) -> TweepyPublisherClient:
         return TweepyPublisherClient(
             consumer_key=profile.consumer_key,
             consumer_secret=profile.consumer_secret,
@@ -86,31 +89,40 @@ def build_scheduler_service(settings: Settings) -> SchedulerService:
     def publisher_lookup() -> PublisherService:
         return build_publisher_service(settings)
 
-    scheduler.register_handler(
-        "scrape-handle",
-        lambda job: scraper_lookup().sync_handle(
-            job.payload["handle"], limit=int(job.payload.get("limit", 40))
-        ),
-    )
-    scheduler.register_handler(
-        "translate-thread",
-        lambda job: translation_lookup().translate_thread(
-            job.payload["tweet_id"],
-            include_titles=job.payload.get("include_titles"),
-            force=bool(job.payload.get("force", False)),
-        ),
-    )
-    scheduler.register_handler(
-        "publish-thread",
-        lambda job: publisher_lookup().publish(
-            job.payload["tweet_id"],
-            profile_name=job.payload.get("profile", "default"),
-            title_index=job.payload.get("title_index"),
-            include_closing=bool(job.payload.get("include_closing", True)),
-            dry_run=bool(job.payload.get("dry_run", False)),
-            force=bool(job.payload.get("force", False)),
-        ),
-    )
+    def handle_scrape(job: ScheduledJob) -> None:
+        handle = str(job.payload.get("handle", ""))
+        limit = int(job.payload.get("limit", 40))
+        scraper_lookup().sync_handle(handle, limit=limit)
+
+    def handle_translate(job: ScheduledJob) -> None:
+        tweet_id = str(job.payload.get("tweet_id", ""))
+        include_titles = job.payload.get("include_titles")
+        force = bool(job.payload.get("force", False))
+        translation_lookup().translate_thread(
+            tweet_id,
+            include_titles=include_titles,
+            force=force,
+        )
+
+    def handle_publish(job: ScheduledJob) -> None:
+        tweet_id = str(job.payload.get("tweet_id", ""))
+        profile_name = str(job.payload.get("profile", "default"))
+        title_index = job.payload.get("title_index")
+        include_closing = bool(job.payload.get("include_closing", True))
+        dry_run = bool(job.payload.get("dry_run", False))
+        force = bool(job.payload.get("force", False))
+        publisher_lookup().publish(
+            tweet_id,
+            profile_name=profile_name,
+            title_index=title_index,
+            include_closing=include_closing,
+            dry_run=dry_run,
+            force=force,
+        )
+
+    scheduler.register_handler("scrape-handle", handle_scrape)
+    scheduler.register_handler("translate-thread", handle_translate)
+    scheduler.register_handler("publish-thread", handle_publish)
     return scheduler
 
 

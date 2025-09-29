@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Callable, Dict, List, Sequence
+from typing import Any, cast
 from uuid import uuid4
 
 from xbot.config.settings import Settings, get_settings
@@ -15,7 +16,7 @@ from xbot.models import JobStatus, ScheduledJob
 try:  # pragma: no cover - optional dependency
     import structlog
 except ImportError:  # pragma: no cover
-    structlog = None  # type: ignore[assignment]
+    structlog = cast(Any, None)
 
 
 @dataclass(frozen=True)
@@ -36,7 +37,7 @@ class SchedulerService:
     ) -> None:
         self._repository = repository
         self._settings = settings or get_settings()
-        self._handlers: Dict[str, Callable[[ScheduledJob], None]] = {}
+        self._handlers: dict[str, Callable[[ScheduledJob], None]] = {}
         if structlog is not None:
             self._logger = structlog.get_logger(__name__)
         else:
@@ -51,7 +52,7 @@ class SchedulerService:
         self,
         name: str,
         *,
-        payload: dict | None = None,
+        payload: dict[str, Any] | None = None,
         run_at: datetime | None = None,
     ) -> ScheduledJob:
         if name not in self._handlers:
@@ -68,7 +69,7 @@ class SchedulerService:
 
         now = now or datetime.now(tz=UTC)
         pending = self._due_jobs(now)
-        results: List[JobExecution] = []
+        results: list[JobExecution] = []
         for job in pending:
             handler = self._handlers.get(job.name)
             if handler is None:
@@ -104,8 +105,8 @@ class SchedulerService:
                 results.append(JobExecution(job=completed, success=True))
         return tuple(results)
 
-    def _due_jobs(self, now: datetime) -> List[ScheduledJob]:
-        due: List[ScheduledJob] = []
+    def _due_jobs(self, now: datetime) -> list[ScheduledJob]:
+        due: list[ScheduledJob] = []
         for job in self._repository.list_pending():
             if job.status not in {JobStatus.PENDING, JobStatus.FAILED}:
                 continue
@@ -114,7 +115,7 @@ class SchedulerService:
         due.sort(key=lambda job: job.run_at)
         return due
 
-    def _log(self, level: str, event: str, **kwargs) -> None:
+    def _log(self, level: str, event: str, **kwargs: Any) -> None:
         if structlog is not None:
             getattr(self._logger, level)(event, **kwargs)
             return
