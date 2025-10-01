@@ -1,7 +1,9 @@
 # Architecture Overview
 
 ## Context
-The toolkit ingests content from monitored X accounts, enriches it with machine translation, and republishes curated threads. Operators manage the pipeline through a CLI or Telegram bot while the system keeps artefacts persisted on disk (pluggable storage layer).
+XBot is a production-ready toolkit (v1.0) that ingests content from monitored X accounts, enriches it with machine translation, and republishes curated threads. Operators manage the pipeline through a CLI or Telegram bot while the system keeps artefacts persisted on disk (pluggable storage layer).
+
+The project has been fully migrated from the legacy `twitter_bot` codebase to modern `xbot` with complete type safety, CI/CD integration, and comprehensive test coverage.
 
 ## Logical Components
 1. **Configuration** - `xbot.config.settings` loads typed settings from environment variables, `.env`, and default values.
@@ -18,11 +20,18 @@ The toolkit ingests content from monitored X accounts, enriches it with machine 
 3. **Publish** - `PublisherService` posts translated content to X, handling media uploads and templated acknowledgements.
 4. **Operate** - Telegram bot and review CLI expose commands for full pipeline control, while the scheduler coordinates deferred execution.
 
+## Quality Assurance
+The codebase maintains high quality standards through:
+- **Static type checking** - Full mypy strict mode compliance across all modules
+- **Linting** - Ruff for code quality and style enforcement
+- **Test coverage** - Comprehensive unit and integration tests
+- **CI/CD** - Automated workflows validate every commit before merge
+
 ## Extensibility
-- Storage adapters can be swapped by implementing repository interfaces.
-- Translation backends are pluggable by conforming to `TranslationProvider` protocol.
-- Scheduler supports long-running worker via APScheduler or Celery in future iterations.
+- Storage adapters can be swapped by implementing repository interfaces
+- Translation backends are pluggable by conforming to `TranslationProvider` protocol
+- Scheduler supports long-running worker via APScheduler or Celery in future iterations
 
 ## Non-Goals
-- Full X automation resilience (captcha solving, advanced ban evasion) is intentionally out of scope.
-- Secrets management beyond `.env` is deferred to hosting environment (use Vault/Secret Manager in production).
+- Full X automation resilience (captcha solving, advanced ban evasion) is intentionally out of scope
+- Secrets management beyond `.env` is deferred to hosting environment (use Vault/Secret Manager in production)

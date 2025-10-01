@@ -32,4 +32,4 @@ See `docs/operations.md` for full instructions and runbooks.
 - `var/` - Runtime artefacts (JSON stores, logs), ignored by git
 
 ## Status
-This repository is under active development as we rebuild the legacy automation stack into a sustainable open-source project.
+**Version 1.0** - This project is now feature-complete with full CI/CD integration, modern typing, and comprehensive test coverage. All core functionality has been implemented, tested, and production-ready.

@@ -1,7 +1,11 @@
 # Operations Guide
 
+## Overview
+This guide covers setup, configuration, and daily operations for the XBot Toolkit (v1.0). All features are production-ready with CI-validated quality gates.
+
 ## Prerequisites
 - Python 3.11+
+- Poetry for dependency management
 - X API credentials (consumer key/secret, per-account tokens)
 - Telegram bot token, API ID, and hash
 - OpenAI API key
@@ -61,6 +65,15 @@
 ## Backups
 - Schedule regular copies of `var/data/` and job states.
 - Use `xbot review export` to extract individual translations for archival sharing.
+
+## Continuous Integration
+The project includes automated CI workflows (`.github/workflows/ci.yml`) that run on every push:
+- Code quality checks (ruff linting)
+- Type checking (mypy with strict mode)
+- Full test suite execution
+- Dependency validation
+
+All tests must pass before merging to the main branch.
 
 ## Troubleshooting
 - **Translation failures** - inspect `var/logs/translation.log` and re-run with `--manual` to obtain prompt.
